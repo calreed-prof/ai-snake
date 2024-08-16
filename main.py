@@ -11,6 +11,9 @@ screen_width, screen_height = 515, 545
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption('Snake AI :)')
 
+# Font
+font = pygame.font.Font(None, 25)
+
 # Grid / Should not be changed
 cell_size = 25
 grid_color = (255, 255, 255)
@@ -135,15 +138,17 @@ while running:
     for y in range(offset + top_offset, screen_height - offset + 1, cell_size):
         pygame.draw.line(screen, grid_color, (offset, y), (screen_width - offset, y))
 
+
+    score_text = font.render(f"Score: {apple_score}", True, (255, 255, 255))
+    screen.blit(score_text, (offset, offset))
+    fps_text = font.render(f"FPS: {clock.get_fps():.2f}", True, (255, 255, 255))
+    screen.blit(fps_text, (410, offset))
     draw_snake()
     draw_apple()
     pygame.display.flip()
 
     # fps
     clock.tick(60)
-
-    # fps = clock.get_fps()
-    # print(f"FPS: {fps:.2f}")
 
 pygame.quit()
 sys.exit()
