@@ -70,6 +70,40 @@ def move_snake(next_direction):
     if not (snek_head_x == apple_x and snek_head_y == apple_y):
         snake.pop(0)
 
+
+def get_distance_to_apple():
+    snek_head_coords = (snek_head_x, snek_head_y)
+    apple_coords = (apple_x, apple_y)
+    distance_to_apple = abs(snek_head_coords[0] - apple_coords[0]) + abs(snek_head_coords[1] - apple_coords[1])
+    return distance_to_apple
+
+def get_distance_to_wall():
+    DistToWallUp = abs(snek_head_y)
+    DistToWallDown = abs(snek_head_y - 18)
+    DistToWallLeft = abs(snek_head_x)
+    DistToWallRight = abs(snek_head_x - 18)
+
+    return DistToWallUp, DistToWallDown, DistToWallLeft, DistToWallRight
+
+def check_body():
+    body_up = 0
+    body_down = 0
+    body_left = 0
+    body_right = 0
+
+    for segment in snake[1:]:
+        segment_x, segment_y = segment
+        if segment_y < snek_head_y:
+            body_up = 1
+        elif segment_y > snek_head_y:
+            body_down = 1
+        elif segment_x < snek_head_x:
+            body_left = 1
+        elif segment_x > snek_head_x:
+            body_right = 1
+
+    return body_up, body_down, body_left, body_right
+
 def draw_apple():
     pygame.draw.rect(screen, (255, 0, 0), (apple_x * cell_size + offset, apple_y * cell_size + offset + top_offset, cell_size, cell_size))
 
@@ -114,11 +148,16 @@ while running:
         next_direction = key_buffer
         key_buffer = None  # clear the key buffer
 
+    # Move the snake
     current_time = time.time()
     if current_time - last_move_time > snake_speed:
         move_snake(next_direction)
         last_move_time = current_time
 
+    # x and y are based on column and row NOT pixel position
+    check_game_over()
+
+    # Check if the snake has eaten the apple
     if snek_head_x == apple_x and snek_head_y == apple_y:
         while True:
             apple_x = random.randint(0, 18)
@@ -126,25 +165,33 @@ while running:
             if (apple_x, apple_y) not in snake:
                 break
         apple_score += 1
+        snake_speed -= .0001 # Increases speed as the snake gets longer
 
-    # x and y are based on column and row NOT pixel position
-    check_game_over()
+    check_body()
+    get_distance_to_wall()
 
     # Fill the Screen with Black
     screen.fill(background_color)
+
     # Draw the Grid based on the Cell Size
     for x in range(offset, screen_width - offset + 1, cell_size):
         pygame.draw.line(screen, grid_color, (x, offset + top_offset), (x, screen_height - offset))
     for y in range(offset + top_offset, screen_height - offset + 1, cell_size):
         pygame.draw.line(screen, grid_color, (offset, y), (screen_width - offset, y))
 
-
+    # Score and FPS
     score_text = font.render(f"Score: {apple_score}", True, (255, 255, 255))
     screen.blit(score_text, (offset, offset))
-    fps_text = font.render(f"FPS: {clock.get_fps():.2f}", True, (255, 255, 255))
-    screen.blit(fps_text, (410, offset))
+    fps_text = font.render(f"FPS: {clock.get_fps():.0f}", True, (255, 255, 255))
+    screen.blit(fps_text, (435, offset))
+    dist_to_apple_text = font.render(f"Distance: {get_distance_to_apple()}", True, (255, 255, 255))
+    screen.blit(dist_to_apple_text, (offset + 80, offset))
+
+    # Draw the snake and apple
     draw_snake()
     draw_apple()
+
+    # Update the display
     pygame.display.flip()
 
     # fps
